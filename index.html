@@ -562,9 +562,9 @@
                     </div>
 
                     <form @submit.prevent="addGuestMessage()" class="space-y-3 font-sans-custom text-left">
-                        <div class="grid grid-cols-2 gap-2">
+                        <div class="grid grid-cols-1 gap-1">
                             <input type="text" x-model="newGuest.name" placeholder="이름" required class="w-full p-3 text-xs bg-wedding-bg border border-wedding-border rounded-xl focus:outline-none focus:border-wedding-primary">
-                            <input type="password" x-model="newGuest.password" placeholder="비밀번호" required class="w-full p-3 text-xs bg-wedding-bg border border-wedding-border rounded-xl focus:outline-none focus:border-wedding-primary">
+                            <!--<input type="password" x-model="newGuest.password" placeholder="비밀번호" required class="w-full p-3 text-xs bg-wedding-bg border border-wedding-border rounded-xl focus:outline-none focus:border-wedding-primary">-->
                         </div>
                         <textarea x-model="newGuest.message" placeholder="축하의 한 마디를 남겨주세요 💕" rows="3" required class="w-full p-3 text-xs bg-wedding-bg border border-wedding-border rounded-xl focus:outline-none focus:border-wedding-primary resize-none"></textarea>
                         <button type="submit" class="w-full py-2.5 bg-wedding-softRose text-wedding-primary font-medium text-xs rounded-xl hover:bg-wedding-primary hover:text-white transition-all shadow-sm">
