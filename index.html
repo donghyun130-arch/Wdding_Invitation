@@ -221,7 +221,7 @@
                 </div>
 
                 <div class="space-y-3">
-                    <p class="text-xs text-wedding-textMuted font-sans-custom">철수와 영희의 결혼식이</p>
+                    <p class="text-xs text-wedding-textMuted font-sans-custom">동현와 회윤의 결혼식이</p>
                     <div class="flex justify-center gap-4 text-center font-sans-custom">
                         <div class="bg-white px-3 py-2 rounded-lg border border-wedding-border min-w-[60px]">
                             <div class="text-xl font-semibold text-wedding-primary" x-text="countdown.days">0</div>
@@ -609,6 +609,7 @@
     <script>
         function weddingApp() {
             return {
+                googleScriptUrl: 'https://script.google.com/macros/s/AKfycbwJa6Zvz6hOd-URk9pnYiWQJtw0VYY_KrMRq_fBvCUxI3zdvknu_Bjo4tZnfT5VCP9X4Q/exec',
                 bgmPlaying: false,
                 userInteracted: false,
                 groomAccordion: false,
@@ -620,12 +621,12 @@
                 lightboxOpen: false,
                 currentPhotoIndex: 0,
                 galleryImages: [
-                    'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=800&q=80'
+                    'Images/Main.jpg',
+                    'Images/1.jpg',
+                    'Images/2.jpg',
+                    'Images/3.jpg',
+                    'Images/4.jpg',
+                    'Images/5.jpg'
                 ],
                 rsvpModalOpen: false,
                 rsvpForm: {
@@ -641,11 +642,11 @@
                     message: ''
                 },
                 guestMessages: [
-                    { id: 1, name: '박지민', date: '2026.04.10', message: '철수야 영희야 너무 축하해! 세상에서 제일 행복한 부부가 되길 응원할게 축복해 💕' },
+                    /*{ id: 1, name: '박지민', date: '2026.04.10', message: '철수야 영희야 너무 축하해! 세상에서 제일 행복한 부부가 되길 응원할게 축복해 💕' },
                     { id: 2, name: '최현우', date: '2026.04.08', message: '결혼 진심으로 축하드립니다. 당일에 반가운 얼굴로 뵙겠습니다!' },
-                    { id: 3, name: '한소희', date: '2026.04.05', message: '언니 너무 예쁘다 ㅠㅠ 꼭 가서 축하해줄게! 두 사람 평생 행복하자!' }
+                    { id: 3, name: '한소희', date: '2026.04.05', message: '언니 너무 예쁘다 ㅠㅠ 꼭 가서 축하해줄게! 두 사람 평생 행복하자!' }*/
                 ],
-                weddingDate: new Date('2026-05-23T13:00:00'),
+                weddingDate: new Date('2027-01-24T11:00:00'),
                 countdown: {
                     days: 0,
                     hours: 0,
@@ -656,6 +657,7 @@
                     this.updateCountdown();
                     setInterval(() => this.updateCountdown(), 1000);
                     this.initScrollAnimations();
+                    this.loadGuestMessages();
                 },
                 handleFirstInteraction() {
                     if (!this.userInteracted && !this.bgmPlaying) {
@@ -760,18 +762,55 @@
                     const today = new Date();
                     const dateStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
 
-                    this.guestMessages.unshift({
-                        id: Date.now(),
+                    // 1. 구글 시트로 보낼 데이터 포맷
+                    const postData = {
+                        type: 'guestbook',
                         name: this.newGuest.name,
-                        date: dateStr,
+                        side: '',
+                        attend: '',
+                        meal: '',
+                        count: '',
                         message: this.newGuest.message
+                    };
+
+                    // 2. 구글 시트로 전송 (fetch 통신)
+                    fetch(this.googleScriptUrl, {
+                        method: 'POST',
+                        mode: 'no-cors', // 구글 시트 CORS 차단 우회
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(postData)
+                    }).then(() => {
+                        // 3. 화면에 방명록 추가
+                        this.guestMessages.unshift({
+                            id: Date.now(),
+                            name: this.newGuest.name,
+                            date: dateStr,
+                            message: this.newGuest.message
+                        });
+
+                        this.newGuest.name = '';
+                        this.newGuest.password = '';
+                        this.newGuest.message = '';
+
+                        this.showToast('축하 메시지가 등록되었습니다. 감사합니다!');
+                    }).catch(err => {
+                        console.error(err);
+                        this.showToast('등록 중 오류가 발생했습니다.');
                     });
-
-                    this.newGuest.name = '';
-                    this.newGuest.password = '';
-                    this.newGuest.message = '';
-
-                    this.showToast('축하 메시지가 등록되었습니다. 감사합니다!');
+                },
+                loadGuestMessages() {
+                    fetch(this.googleScriptUrl)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (Array.isArray(data)) {
+                                this.guestMessages = data;
+                            }
+                        })
+                        .catch(err => {
+                            console.error('방명록 불러오기 실패:', err);
+                        });
                 },
                 submitRsvp() {
                     this.rsvpModalOpen = false;
