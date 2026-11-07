@@ -373,7 +373,7 @@
                 </div>
 
                 <div class="relative w-full h-56 bg-gray-100 rounded-2xl overflow-hidden border border-wedding-border shadow-inner my-4">
-                    <iframe src="https://map.naver.com/p/search/%EC%84%B8%ED%8A%B8%ED%94%84%EB%A6%AF%EB%AF%B8%EC%96%B4%ED%98%B8%ED%85%94?c=15.00,0,0,0,dh"
+                    <iframe src="https://place.map.kakao.com/1015034422"
                             class="w-full h-full border-0"
                             allowfullscreen=""
                             loading="lazy"
@@ -463,10 +463,10 @@
                         <div x-show="groomAccordion" x-collapse class="px-5 pb-5 pt-2 space-y-3 text-xs text-left border-t border-wedding-border/50 bg-wedding-bg/30">
                             <div class="flex justify-between items-center pt-2">
                                 <div>
-                                    <p class="text-wedding-textMuted">우리은행 <span class="font-mono text-wedding-textDark">1002-464-110471</span></p>
+                                    <p class="text-wedding-textMuted">국민은행 <span class="font-mono text-wedding-textDark">123-4567-8901</span></p>
                                     <p class="text-wedding-textDark font-medium">예금주: 권동현 (신랑)</p>
                                 </div>
-                                <button @click="copyText('1002-464-110471', '신랑 계좌번호가 복사되었습니다.')" class="py-1.5 px-3 bg-wedding-softRose text-wedding-primary rounded-md font-medium text-[11px] active:scale-95 transition-all">
+                                <button @click="copyText('123-4567-8901', '신랑 계좌번호가 복사되었습니다.')" class="py-1.5 px-3 bg-wedding-softRose text-wedding-primary rounded-md font-medium text-[11px] active:scale-95 transition-all">
                                     복사
                                 </button>
                             </div>
@@ -934,10 +934,42 @@
                         });
                 },
                 submitRsvp() {
-                    this.rsvpModalOpen = false;
-                    this.showToast('참석 여부가 전달되었습니다. 감사합니다!');
-                    this.rsvpForm.name = '';
-                    this.rsvpForm.count = 1;
+                    if (!this.rsvpForm.name) {
+                        this.showToast('성함을 입력해 주세요.');
+                        return;
+                    }
+
+                    // 구글 스크립트(doPost)의 데이터 구조에 맞춘 객체 생성
+                    const postData = {
+                        type: 'rsvp',
+                        name: this.rsvpForm.name,
+                        side: this.rsvpForm.side === 'groom' ? '신랑측' : '신부측',
+                        attend: this.rsvpForm.attend === 'yes' ? '참석 가능' : '참석 어려움',
+                        meal: this.rsvpForm.meal === 'yes' ? '식사 함' : (this.rsvpForm.meal === 'no' ? '식사 안함' : '미정'),
+                        count: this.rsvpForm.count
+                    };
+
+                    // 구글 앱스 스크립트로 데이터 전송
+                    fetch(this.googleScriptUrl, {
+                        method: 'POST',
+                        mode: 'no-cors', // CORS 제한 해제
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(postData)
+                    }).then(() => {
+                        this.rsvpModalOpen = false;
+                        this.showToast('참석 여부가 전달되었습니다. 감사합니다!');
+
+                        // 폼 초기화
+                        this.rsvpForm.name = '';
+                        this.rsvpForm.count = 1;
+                        this.rsvpForm.attend = 'yes';
+                        this.rsvpForm.meal = 'yes';
+                    }).catch(err => {
+                        console.error('RSVP 전송 오류:', err);
+                        this.showToast('전송 중 오류가 발생했습니다.');
+                    });
                 },
                 shareKakaoSimulated() {
                     this.showToast('카카오톡으로 모바일 청첩장을 공유합니다.');
